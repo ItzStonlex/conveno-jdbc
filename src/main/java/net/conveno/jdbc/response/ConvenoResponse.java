@@ -30,15 +30,20 @@ public class ConvenoResponse extends ArrayList<ConvenoResponseLine> {
         int columns = metadata.getColumnCount();
         int index = 0;
 
+        ConvenoResponseLine prev = null;
+
         while (executionResult.next()) {
 
-            int finalIndex = index; // java8 fuck u
-            Supplier<ConvenoResponseLine> nextSupplier = () -> super.get(finalIndex); // todo - optimize
-
-            ConvenoResponseLine responseLine = new ConvenoResponseLine(index == 0, index == (columns - 1), nextSupplier);
+            ConvenoResponseLine responseLine = new ConvenoResponseLine(index == 0, index == (columns - 1));
             injectResponseLine(responseLine, executionResult, metadata, columns);
 
+            if (prev != null) {
+                prev.setNext(responseLine);
+            }
+
             super.add(responseLine);
+
+            prev = responseLine;
             index++;
         }
     }

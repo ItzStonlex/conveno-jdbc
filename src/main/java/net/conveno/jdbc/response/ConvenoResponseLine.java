@@ -20,7 +20,9 @@ public class ConvenoResponseLine extends LinkedHashMap<Integer, Object> implemen
     @Getter
     boolean firstLine, lastLine;
 
-    Supplier<ConvenoResponseLine> next;
+    @NonFinal
+    @Setter(AccessLevel.PACKAGE)
+    ConvenoResponseLine next;
 
     @NonFinal
     @Setter(AccessLevel.PACKAGE)
@@ -38,7 +40,7 @@ public class ConvenoResponseLine extends LinkedHashMap<Integer, Object> implemen
     int currentIndex;
 
     public ConvenoResponseLine nextLine() {
-        return next.get();
+        return next;
     }
 
     public int nextIndex() {
