@@ -49,7 +49,7 @@ public interface JDBCRepositoryTest {
      * Marked as asynchronous.
      * {@link ConvenoAsynchronous}
      */
-    @ConvenoAsynchronous
+    @ConvenoAsynchronous(onlySubmit = true)
     @ConvenoQuery(sql = "create table if not exists ${table} (" +
             "id int not null primary key auto_increment, " +
             "name varchar not null, " +
@@ -88,7 +88,7 @@ public interface JDBCRepositoryTest {
      * @return - A response that contains an inserted
      *          user generated key.
      */
-    @ConvenoAsynchronous
+    @ConvenoAsynchronous(join = false)
     @ConvenoCaching(scope = CacheScope.PROTOTYPE)
     @ConvenoQuery(sql = "insert into ${table} (name, age) values (${user}.$name, ${user}.$age)")
     ConvenoResponse insert(@ConvenoParam("user") Userinfo userinfo);
