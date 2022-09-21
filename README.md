@@ -118,7 +118,7 @@ The next step is to initialize our repository<br>
 and connect to the database driver.
 
 For reference: At the bottom level, the library<br>
-uses com.zaxxar:HikariCP for proxied connection to your<br>
+uses `com.zaxxar:HikariCP` for proxied connection to your<br>
 database's JDBC driver.
 
 Using example:
