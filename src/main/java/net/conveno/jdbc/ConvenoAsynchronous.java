@@ -10,4 +10,6 @@ import java.lang.annotation.Target;
 public @interface ConvenoAsynchronous {
 
     boolean join() default true;
+
+    boolean onlySubmit() default false;
 }

@@ -64,8 +64,12 @@ public class ProxiedRepository implements InvocationHandler {
         if (RepositoryValidator.isAsynchronous(method)) {
 
             ConvenoAsynchronous asynchronous = method.getDeclaredAnnotation(ConvenoAsynchronous.class);
-            CompletableFuture<T> completableFuture = CompletableFuture.supplyAsync(() -> get(supplier), THREADS_POOL_EXECUTOR);
 
+            if (asynchronous.onlySubmit()) {
+                THREADS_POOL_EXECUTOR.submit(() -> get(supplier));
+            }
+
+            CompletableFuture<T> completableFuture = CompletableFuture.supplyAsync(() -> get(supplier), THREADS_POOL_EXECUTOR);
             return asynchronous.join() ? completableFuture.join() : completableFuture.get();
         }
 
