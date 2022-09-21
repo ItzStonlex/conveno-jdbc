@@ -23,6 +23,8 @@ public class BootstrapTest {
         ConvenoRouter convenoRouter = ConvenoRouter.create();
         JDBCRepositoryTest repository = convenoRouter.getRepository(JDBCRepositoryTest.class);
 
+        long startTime = System.currentTimeMillis();
+
         // Create a table.
         repository.createTable();
 
@@ -55,5 +57,7 @@ public class BootstrapTest {
                 System.out.println(responseLine.getNullableInt(1));
             }
         }
+
+        System.out.println("Time speed: " + (System.currentTimeMillis() - startTime) + "ms");
     }
 }

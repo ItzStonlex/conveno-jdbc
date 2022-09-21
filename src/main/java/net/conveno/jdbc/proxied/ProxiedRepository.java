@@ -1,27 +1,23 @@
 package net.conveno.jdbc.proxied;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
-import net.conveno.jdbc.ConvenoQuery;
-import net.conveno.jdbc.ConvenoTable;
-import net.conveno.jdbc.ConvenoTransaction;
+import net.conveno.jdbc.*;
 import net.conveno.jdbc.response.ConvenoResponse;
 import net.conveno.jdbc.response.ConvenoResponseExecutor;
-import net.conveno.jdbc.util.RepositoryQueryParser;
 import net.conveno.jdbc.util.RepositoryValidator;
 
 import java.io.InvalidObjectException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Function;
 
 @FieldDefaults(makeFinal = true)
 public class ProxiedRepository implements InvocationHandler {
@@ -70,26 +66,42 @@ public class ProxiedRepository implements InvocationHandler {
         return get(supplier);
     }
 
-    private ConvenoResponseExecutor toResponseExecutor(String sql)
-    throws SQLException {
-
-        ProxiedQuery proxiedQuery = connection.query(sql);
-        proxiedQuery.prepare();
-
-        return connection.execute(proxiedQuery);
+    private CacheScope getCacheScope(Method method) {
+        ConvenoCaching caching = method.getDeclaredAnnotation(ConvenoCaching.class);
+        return caching != null ? caching.scope() : null;
     }
 
-    private ProxiedQuery[] toTransactionQueries(Method method, Function<String, String> queryParsingFunction)
+    private ConvenoResponseExecutor toResponseExecutor(String sql, Method method, Object[] args)
+    throws SQLException {
+
+        CacheScope cacheScope = getCacheScope(method);
+
+        ProxiedQuery proxiedQuery = connection.query(cacheScope, sql);
+        proxiedQuery.prepare();
+
+        if (cacheScope == null) {
+            proxiedQuery.uncached();
+        }
+
+        return connection.execute(proxiedQuery, this, method.getParameters(), args);
+    }
+
+    private ProxiedQuery[] toTransactionQueries(Method method)
     throws SQLException {
 
         List<ProxiedQuery> transactionQueries = new ArrayList<>();
 
         ConvenoTransaction transactionAnnotation = method.getDeclaredAnnotation(ConvenoTransaction.class);
+        CacheScope cacheScope = getCacheScope(method);
 
         for (ConvenoQuery queryAnnotation : transactionAnnotation.value()) {
 
-            ProxiedQuery proxiedQuery = connection.query(queryParsingFunction.apply(queryAnnotation.sql()));
+            ProxiedQuery proxiedQuery = connection.query(cacheScope, queryAnnotation.sql());
             proxiedQuery.prepare();
+
+            if (cacheScope == null) {
+                proxiedQuery.uncached();
+            }
 
             transactionQueries.add(proxiedQuery);
         }
@@ -100,7 +112,6 @@ public class ProxiedRepository implements InvocationHandler {
     @SuppressWarnings("SuspiciousInvocationHandlerImplementation")
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) {
-        Parameter[] parameters = method.getParameters();
 
         Class<?> returnType = method.getReturnType();
         boolean isResponseAwait = List.class.isAssignableFrom(returnType);
@@ -110,9 +121,9 @@ public class ProxiedRepository implements InvocationHandler {
             List<ConvenoResponse> response = new ArrayList<>();
 
             if (RepositoryValidator.isQuery(method)) {
-                ConvenoResponseExecutor responseExecutor = toResponseExecutor(
-                        RepositoryQueryParser.parse(this, RepositoryValidator.toStringQuery(method), parameters, args)
-                );
+
+                String sql = RepositoryValidator.toStringQuery(method);
+                ConvenoResponseExecutor responseExecutor = toResponseExecutor(sql, method, args);
 
                 if (isResponseAwait) {
                     response.add(new ConvenoResponse(connection.getRouter(), responseExecutor));
@@ -124,10 +135,9 @@ public class ProxiedRepository implements InvocationHandler {
             } else {
 
                 if (RepositoryValidator.isTransaction(method)) {
-                    ProxiedTransaction transaction = new ProxiedTransaction(connection, toTransactionQueries(method,
-                            sql -> RepositoryQueryParser.parse(this, sql, parameters, args)));
+                    ProxiedTransaction transaction = new ProxiedTransaction(connection, toTransactionQueries(method));
 
-                    response = transaction.executeQueries();
+                    response = transaction.executeQueries(this, method, args);
 
                 } else {
                     throw new InvalidObjectException(method.toString());

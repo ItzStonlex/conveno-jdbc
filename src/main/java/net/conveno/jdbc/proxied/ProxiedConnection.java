@@ -3,9 +3,11 @@ package net.conveno.jdbc.proxied;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import net.conveno.jdbc.CacheScope;
 import net.conveno.jdbc.ConvenoRouter;
 import net.conveno.jdbc.response.ConvenoResponseExecutor;
 
+import java.lang.reflect.Parameter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -25,21 +27,23 @@ public class ProxiedConnection {
 
     private Map<String, ProxiedQuery> cache = new IdentityHashMap<>();
 
-    public ProxiedQuery query(String sql) {
-        return cache.computeIfAbsent(sql, __ -> new ProxiedQuery(this, sql.intern()));
-    }
-
-    ConvenoResponseExecutor execute(ProxiedQuery query, Object... initargs)
+    public ProxiedQuery query(CacheScope scope, String sql)
     throws SQLException {
 
-        ProxiedQuery clone = query.clone();
-
-        clone.setArguments(initargs);
-
-        if (FETCH_PREFIXES.stream().anyMatch(prefix -> query.getSql().toLowerCase().startsWith(prefix))) {
-            return clone.wrapResponse();
+        if (scope == null) {
+            return new ProxiedQuery(this, sql);
         }
 
-        return clone.wrapGeneratedKeysResponse();
+        return scope.processGet(this, sql, cache);
+    }
+
+    ConvenoResponseExecutor execute(ProxiedQuery query, ProxiedRepository repository, Parameter[] parameters, Object[] initargs)
+    throws SQLException {
+
+        if (FETCH_PREFIXES.stream().anyMatch(prefix -> query.getSql().toLowerCase().startsWith(prefix))) {
+            return query.wrapResponse(repository, parameters, initargs);
+        }
+
+        return query.wrapGeneratedKeysResponse(repository, parameters, initargs);
     }
 }

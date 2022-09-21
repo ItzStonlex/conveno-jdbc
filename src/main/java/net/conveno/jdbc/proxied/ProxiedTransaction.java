@@ -7,6 +7,7 @@ import net.conveno.jdbc.response.ConvenoResponse;
 import net.conveno.jdbc.response.ConvenoResponseExecutor;
 import net.conveno.jdbc.response.ConvenoTransactionResponse;
 
+import java.lang.reflect.Method;
 import java.sql.SQLException;
 
 @RequiredArgsConstructor
@@ -48,7 +49,7 @@ public class ProxiedTransaction {
         connection.getConnection().setAutoCommit(!canCommit);
     }
 
-    public synchronized ConvenoTransactionResponse executeQueries()
+    public synchronized ConvenoTransactionResponse executeQueries(ProxiedRepository repository, Method method, Object[] args)
     throws SQLException {
 
         ConvenoTransactionResponse transactionResponse = new ConvenoTransactionResponse();
@@ -56,7 +57,7 @@ public class ProxiedTransaction {
 
         for (ProxiedQuery proxiedQuery : proxiedQueries) {
             try {
-                ConvenoResponseExecutor executor = connection.execute(proxiedQuery);
+                ConvenoResponseExecutor executor = connection.execute(proxiedQuery, repository, method.getParameters(), args);
                 transactionResponse.add(
                         new ConvenoResponse(connection.getRouter(), executor)
                 );

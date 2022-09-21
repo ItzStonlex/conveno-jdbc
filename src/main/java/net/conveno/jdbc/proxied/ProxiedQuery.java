@@ -1,74 +1,60 @@
 package net.conveno.jdbc.proxied;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import net.conveno.jdbc.response.ConvenoResponseExecutor;
 import net.conveno.jdbc.response.Result;
+import net.conveno.jdbc.util.RepositoryQueryParser;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.io.Serializable;
-import java.sql.PreparedStatement;
+import java.lang.reflect.Parameter;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 
 @Getter
 @FieldDefaults(makeFinal = true)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @RequiredArgsConstructor(access = AccessLevel.PUBLIC)
-public class ProxiedQuery implements Closeable, Cloneable, Serializable {
+public class ProxiedQuery implements Cloneable, Serializable {
 
     private transient ProxiedConnection connection;
     private String sql;
 
     @NonFinal
-    private transient PreparedStatement preparedStatement;
+    private transient Statement statement;
 
     void prepare()
     throws SQLException {
 
-        if (preparedStatement == null) {
-            preparedStatement = connection.getConnection().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        if (statement == null) {
+            statement = connection.getConnection().createStatement();
         }
     }
 
-    void setArguments(Object[] initargs)
+    void uncached()
     throws SQLException {
 
-        preparedStatement.clearParameters();
-
-        int idx = 1;
-        for (Object argument : initargs) {
-
-            if (argument == null) {
-                preparedStatement.setNull(idx, Types.NULL);
-            }
-            else {
-                preparedStatement.setObject(idx, argument);
-            }
-
-            idx++;
+        if (statement != null) {
+            statement.closeOnCompletion();
         }
     }
 
-    ConvenoResponseExecutor wrapResponse() {
-        return () -> Result.of(0, preparedStatement.executeQuery());
+    ConvenoResponseExecutor wrapResponse(ProxiedRepository repository, Parameter[] parameters, Object[] initargs) {
+        String sql = RepositoryQueryParser.parse(repository, this.sql, parameters, initargs);
+        return () -> Result.of(0, statement.executeQuery(sql));
     }
 
-    ConvenoResponseExecutor wrapGeneratedKeysResponse() {
-        return () -> Result.of(preparedStatement.executeUpdate(), preparedStatement.getGeneratedKeys());
-    }
-
-    @SneakyThrows
-    @Override
-    public void close() throws IOException {
-        preparedStatement.close();
+    ConvenoResponseExecutor wrapGeneratedKeysResponse(ProxiedRepository repository, Parameter[] parameters, Object[] initargs) {
+        String sql = RepositoryQueryParser.parse(repository, this.sql, parameters, initargs);
+        return () -> Result.of(statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS), statement.getGeneratedKeys());
     }
 
     @Override
     public ProxiedQuery clone() {
-        return new ProxiedQuery(connection, sql, preparedStatement);
+        return new ProxiedQuery(connection, sql, statement);
     }
 }

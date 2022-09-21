@@ -8,16 +8,23 @@ import net.conveno.jdbc.proxied.ProxiedRepository;
 import java.lang.annotation.IncompleteAnnotationException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Parameter;
+import java.util.ArrayList;
+import java.util.List;
 
 @UtilityClass
 public class RepositoryQueryParser {
 
+    private final String QUESTION_CHAR = "?";
     private final String STRING_PARAMETER_FORMAT = "'%s'";
     private final String REPLACEMENT_PARAMETER_FORMAT = "${%s}";
 
     private final String VARIABLE_SPLITTER = ".$";
 
     private String toString(Object value) {
+        if (value == QUESTION_CHAR) {
+            return QUESTION_CHAR;
+        }
+
         return value instanceof Number ? value.toString() : String.format(STRING_PARAMETER_FORMAT, value);
     }
 
@@ -64,6 +71,16 @@ public class RepositoryQueryParser {
         }
 
         return setTable(repository, sql);
+    }
+
+    public String parseToQuestions(ProxiedRepository repository, String sql, Parameter[] parameters) {
+        StringBuilder questionsLine = new StringBuilder();
+
+        for (int i = 0; i < parameters.length; i++) {
+            questionsLine.append(QUESTION_CHAR);
+        }
+
+        return parse(repository, sql, parameters, questionsLine.toString().split(""));
     }
 
 }
