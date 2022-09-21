@@ -8,7 +8,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import net.conveno.jdbc.response.ConvenoResponseExecutor;
 import net.conveno.jdbc.response.Result;
-import net.conveno.jdbc.util.RepositoryQueryParser;
+import net.conveno.jdbc.util.StringParser;
 
 import java.io.Serializable;
 import java.lang.reflect.Parameter;
@@ -44,12 +44,12 @@ public class ProxiedQuery implements Cloneable, Serializable {
     }
 
     ConvenoResponseExecutor wrapResponse(ProxiedRepository repository, Parameter[] parameters, Object[] initargs) {
-        String sql = RepositoryQueryParser.parse(repository, this.sql, parameters, initargs);
+        String sql = StringParser.parse(repository, this.sql, parameters, initargs);
         return () -> Result.of(0, statement.executeQuery(sql));
     }
 
     ConvenoResponseExecutor wrapGeneratedKeysResponse(ProxiedRepository repository, Parameter[] parameters, Object[] initargs) {
-        String sql = RepositoryQueryParser.parse(repository, this.sql, parameters, initargs);
+        String sql = StringParser.parse(repository, this.sql, parameters, initargs);
         return () -> Result.of(statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS), statement.getGeneratedKeys());
     }
 

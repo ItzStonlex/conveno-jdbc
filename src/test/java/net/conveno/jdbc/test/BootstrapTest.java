@@ -20,6 +20,8 @@ public class BootstrapTest {
     }
 
     public static void main(String[] args) {
+        System.setProperty("jdbc.h2.password", "password");
+
         ConvenoRouter convenoRouter = ConvenoRouter.create();
         JDBCRepositoryTest repository = convenoRouter.getRepository(JDBCRepositoryTest.class);
 

@@ -7,7 +7,7 @@ import net.conveno.jdbc.response.ConvenoTransactionResponse;
 @ConvenoTable(name = "users")
 @ConvenoRepository(jdbc = "jdbc:h2:mem:default",
         username = "root",
-        password = "password")
+        password = "${system.jdbc.h2.password}")
 public interface JDBCRepositoryTest {
 
     /**

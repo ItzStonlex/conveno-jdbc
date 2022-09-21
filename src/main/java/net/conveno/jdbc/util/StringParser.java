@@ -8,11 +8,11 @@ import net.conveno.jdbc.proxied.ProxiedRepository;
 import java.lang.annotation.IncompleteAnnotationException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Parameter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 
 @UtilityClass
-public class RepositoryQueryParser {
+public class StringParser {
 
     private final String QUESTION_CHAR = "?";
     private final String STRING_PARAMETER_FORMAT = "'%s'";
@@ -70,17 +70,19 @@ public class RepositoryQueryParser {
             sql = setParam(sql, name, initargs[idx]);
         }
 
-        return setTable(repository, sql);
+        return parseSystemProperties(setTable(repository, sql));
     }
 
-    public String parseToQuestions(ProxiedRepository repository, String sql, Parameter[] parameters) {
-        StringBuilder questionsLine = new StringBuilder();
+    public String parseSystemProperties(String string) {
+        Properties properties = System.getProperties();
 
-        for (int i = 0; i < parameters.length; i++) {
-            questionsLine.append(QUESTION_CHAR);
+        Set<String> keys = properties.stringPropertyNames();
+
+        for (String key : keys) {
+            string = string.replace(String.format(REPLACEMENT_PARAMETER_FORMAT, "system." + key), properties.getProperty(key));
         }
 
-        return parse(repository, sql, parameters, questionsLine.toString().split(""));
+        return string;
     }
 
 }

@@ -8,6 +8,7 @@ import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import net.conveno.jdbc.proxied.ProxiedConnection;
 import net.conveno.jdbc.proxied.ProxiedRepository;
+import net.conveno.jdbc.util.StringParser;
 import sun.misc.Unsafe;
 
 import javax.sql.DataSource;
@@ -76,10 +77,10 @@ public final class ConvenoRouter {
     private DataSource createDataSource(ConvenoRepository repositoryAnnotation) {
         HikariDataSource dataSource = new HikariDataSource();
 
-        dataSource.setJdbcUrl(repositoryAnnotation.jdbc());
+        dataSource.setJdbcUrl(StringParser.parseSystemProperties(repositoryAnnotation.jdbc()));
 
-        dataSource.setUsername(repositoryAnnotation.username());
-        dataSource.setPassword(repositoryAnnotation.password());
+        dataSource.setUsername(StringParser.parseSystemProperties(repositoryAnnotation.username()));
+        dataSource.setPassword(StringParser.parseSystemProperties(repositoryAnnotation.password()));
 
         return dataSource;
     }
