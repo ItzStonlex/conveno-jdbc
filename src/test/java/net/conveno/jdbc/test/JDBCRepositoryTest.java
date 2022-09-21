@@ -58,7 +58,7 @@ public interface JDBCRepositoryTest {
      * @return - A response that contains an inserted
      *          user generated key.
      */
-    @ConvenoAsynchronous
+    @ConvenoAsynchronous(join = false)
     @ConvenoCaching(scope = CacheScope.PROTOTYPE)
     @ConvenoQuery(sql = "insert into ${table} (name, age) values (${user}.$name, ${user}.$age)")
     ConvenoResponse insert(@ConvenoParam("user") Userinfo userinfo);

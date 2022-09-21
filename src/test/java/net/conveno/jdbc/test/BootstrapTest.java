@@ -43,6 +43,7 @@ public class BootstrapTest {
         ConvenoResponse insert = repository.insert(misha);
 
         int userID = insert.first().getNullableInt(1);
+
         System.out.println("Misha User ID - " + userID);
 
         // Get list of users by internal Userinfo conveno-adapter.

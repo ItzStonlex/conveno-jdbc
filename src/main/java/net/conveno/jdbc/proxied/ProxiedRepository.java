@@ -2,6 +2,7 @@ package net.conveno.jdbc.proxied;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import net.conveno.jdbc.*;
@@ -58,9 +59,14 @@ public class ProxiedRepository implements InvocationHandler {
         }
     }
 
+    @SneakyThrows
     private <T> T execute(Method method, SneakySupplier<T> supplier) {
         if (RepositoryValidator.isAsynchronous(method)) {
-            return CompletableFuture.supplyAsync(() -> get(supplier), THREADS_POOL_EXECUTOR).join();
+
+            ConvenoAsynchronous asynchronous = method.getDeclaredAnnotation(ConvenoAsynchronous.class);
+            CompletableFuture<T> completableFuture = CompletableFuture.supplyAsync(() -> get(supplier), THREADS_POOL_EXECUTOR);
+
+            return asynchronous.join() ? completableFuture.join() : completableFuture.get();
         }
 
         return get(supplier);
