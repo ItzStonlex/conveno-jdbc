@@ -8,6 +8,7 @@ import net.conveno.jdbc.*;
 import net.conveno.jdbc.response.ConvenoResponse;
 import net.conveno.jdbc.response.ConvenoResponseExecutor;
 import net.conveno.jdbc.util.RepositoryValidator;
+import net.conveno.jdbc.util.SneakySupplier;
 
 import java.io.InvalidObjectException;
 import java.lang.reflect.InvocationHandler;
@@ -23,11 +24,6 @@ import java.util.concurrent.Executors;
 public class ProxiedRepository implements InvocationHandler {
 
     private static final ExecutorService THREADS_POOL_EXECUTOR = Executors.newCachedThreadPool();
-
-    private interface SneakySupplier<T> {
-
-        T get() throws Exception;
-    }
 
     private ProxiedConnection connection;
 
@@ -47,17 +43,6 @@ public class ProxiedRepository implements InvocationHandler {
         }
     }
 
-    private <T> T get(SneakySupplier<T> supplier) {
-        try {
-            return supplier.get();
-        }
-        catch (Exception exception) {
-            exception.printStackTrace();
-
-            return null;
-        }
-    }
-
     @SneakyThrows
     private <T> T execute(Method method, SneakySupplier<T> supplier) {
         if (RepositoryValidator.isAsynchronous(method)) {
@@ -65,14 +50,14 @@ public class ProxiedRepository implements InvocationHandler {
             ConvenoAsynchronous asynchronous = method.getDeclaredAnnotation(ConvenoAsynchronous.class);
 
             if (asynchronous.onlySubmit()) {
-                THREADS_POOL_EXECUTOR.submit(() -> get(supplier));
+                THREADS_POOL_EXECUTOR.submit(() -> SneakySupplier.sneakyGet(supplier));
             }
 
-            CompletableFuture<T> completableFuture = CompletableFuture.supplyAsync(() -> get(supplier), THREADS_POOL_EXECUTOR);
+            CompletableFuture<T> completableFuture = CompletableFuture.supplyAsync(() -> SneakySupplier.sneakyGet(supplier), THREADS_POOL_EXECUTOR);
             return asynchronous.join() ? completableFuture.join() : completableFuture.get();
         }
 
-        return get(supplier);
+        return SneakySupplier.sneakyGet(supplier);
     }
 
     private CacheScope getCacheScope(Method method) {
@@ -138,7 +123,7 @@ public class ProxiedRepository implements InvocationHandler {
                 ConvenoResponseExecutor responseExecutor = toResponseExecutor(sql, method, args);
 
                 if (isResponseAwait) {
-                    response.add(new ConvenoResponse(connection.getRouter(), responseExecutor));
+                    response.add(new ConvenoResponse(connection.getUnsafe(), responseExecutor));
                 }
                 else {
                     responseExecutor.execute();

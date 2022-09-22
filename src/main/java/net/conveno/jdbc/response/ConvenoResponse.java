@@ -1,7 +1,8 @@
 package net.conveno.jdbc.response;
 
+import lombok.Getter;
 import lombok.experimental.FieldDefaults;
-import net.conveno.jdbc.ConvenoRouter;
+import sun.misc.Unsafe;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -13,14 +14,19 @@ import java.util.stream.Collectors;
 @FieldDefaults(makeFinal = true)
 public class ConvenoResponse extends ArrayList<ConvenoResponseLine> {
 
-    private ConvenoRouter router;
+    private Unsafe unsafe;
 
-    public ConvenoResponse(ConvenoRouter router, ConvenoResponseExecutor executor)
+    @Getter
+    private int affectedRows;
+
+    public ConvenoResponse(Unsafe unsafe, ConvenoResponseExecutor executor)
     throws SQLException {
 
-        this.router = router;
+        this.unsafe = unsafe;
 
         Result result = executor.execute();
+        this.affectedRows = result.getAffectedRows();
+
         addAll(result.getResultSet().getMetaData(), result.getResultSet());
     }
 
@@ -81,8 +87,8 @@ public class ConvenoResponse extends ArrayList<ConvenoResponseLine> {
 
     private <T> T unsafeAllocate(Class<T> adaptiveType) {
         try {
-            @SuppressWarnings("unchecked") T unsafe = (T) router.getUnsafe().allocateInstance(adaptiveType);
-            return unsafe;
+            @SuppressWarnings("unchecked") T allocateInstance = (T) unsafe.allocateInstance(adaptiveType);
+            return allocateInstance;
         }
         catch (InstantiationException e) {
             throw new RuntimeException(e);

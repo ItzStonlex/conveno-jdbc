@@ -70,7 +70,7 @@ public class StringParser {
             sql = setParam(sql, name, initargs[idx]);
         }
 
-        return parseSystemProperties(setTable(repository, sql));
+        return setTable(repository, sql);
     }
 
     public String parseSystemProperties(String string) {

@@ -44,6 +44,7 @@ public class BootstrapTest {
 
         int userID = insert.first().getNullableInt(1);
 
+        System.out.println("Misha User insertion affected rows - " + insert.getAffectedRows());
         System.out.println("Misha User ID - " + userID);
 
         // Get list of users by internal Userinfo conveno-adapter.

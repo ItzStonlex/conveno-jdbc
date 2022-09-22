@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import net.conveno.jdbc.CacheScope;
 import net.conveno.jdbc.ConvenoRouter;
 import net.conveno.jdbc.response.ConvenoResponseExecutor;
+import sun.misc.Unsafe;
 
 import java.lang.reflect.Parameter;
 import java.sql.Connection;
@@ -21,7 +22,7 @@ public class ProxiedConnection {
 
     private static final List<String> FETCH_PREFIXES = Arrays.asList("select", "show");
 
-    private ConvenoRouter router;
+    private Unsafe unsafe;
     private Connection connection;
 
     private Map<String, ProxiedQuery> cache = new HashMap<>();

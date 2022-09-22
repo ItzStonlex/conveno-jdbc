@@ -55,7 +55,7 @@ public class ProxiedTransaction {
             try {
                 ConvenoResponseExecutor executor = connection.execute(proxiedQuery, repository, method.getParameters(), args);
                 transactionResponse.add(
-                        new ConvenoResponse(connection.getRouter(), executor)
+                        new ConvenoResponse(connection.getUnsafe(), executor)
                 );
             }
             catch (Exception exception) {
