@@ -4,16 +4,15 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import net.conveno.jdbc.CacheScope;
-import net.conveno.jdbc.ConvenoRouter;
 import net.conveno.jdbc.response.ConvenoResponseExecutor;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Parameter;
 import java.sql.Connection;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 @RequiredArgsConstructor
@@ -25,7 +24,7 @@ public class ProxiedConnection {
     private Unsafe unsafe;
     private Connection connection;
 
-    private Map<String, ProxiedQuery> cache = new HashMap<>();
+    private Map<String, ProxiedQuery> cache = new ConcurrentHashMap<>();
 
     public ProxiedQuery query(CacheScope scope, String sql) {
 

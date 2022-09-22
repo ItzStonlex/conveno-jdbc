@@ -34,10 +34,6 @@ public class ConvenoResponseLine extends LinkedHashMap<Integer, Object> implemen
     Map<String, Integer> indexByLabelsMap;
 
     @NonFinal
-    @Setter(AccessLevel.PACKAGE)
-    Map<Integer, String> labelByIndexesMap;
-
-    @NonFinal
     int currentIndex;
 
     public ConvenoResponseLine nextLine() {
@@ -57,7 +53,7 @@ public class ConvenoResponseLine extends LinkedHashMap<Integer, Object> implemen
     }
 
     public String findLabel(int index) {
-        return labelByIndexesMap.get(index);
+        return indexByLabelsMap.keySet().stream().filter(label -> findIndex(label) == index).findFirst().orElse(null);
     }
 
     // *------------------------------------------------- * //

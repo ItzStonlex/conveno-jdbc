@@ -58,18 +58,14 @@ public class ConvenoResponse extends ArrayList<ConvenoResponseLine> {
     throws SQLException {
 
         // create caches data.
-        Set<Integer> nullableIndexes = new HashSet<>();
-
         Map<String, Integer> indexByLabelsMap = new HashMap<>();
-        Map<Integer, String> labelByIndexesMap = new HashMap<>();
+        Set<Integer> nullableIndexes = new HashSet<>();
 
         // init columns data.
         for (int columnIndex = 1; columnIndex <= columns; columnIndex++) {
-
             String name = metadata.getColumnName(columnIndex);
 
             indexByLabelsMap.put(name.toLowerCase(), columnIndex);
-            labelByIndexesMap.put(columnIndex, name);
 
             if (metadata.isNullable(columnIndex) == ResultSetMetaData.columnNullable) {
                 nullableIndexes.add(columnIndex);
@@ -80,8 +76,6 @@ public class ConvenoResponse extends ArrayList<ConvenoResponseLine> {
 
         // set metadata values for response-line.
         responseLine.setIndexByLabelsMap(indexByLabelsMap);
-        responseLine.setLabelByIndexesMap(labelByIndexesMap);
-
         responseLine.setNullableIndexes(nullableIndexes);
     }
 

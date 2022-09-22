@@ -9,6 +9,7 @@ import net.conveno.jdbc.proxied.ProxiedConnection;
 import net.conveno.jdbc.proxied.ProxiedRepository;
 import net.conveno.jdbc.util.SneakyCatcher;
 import net.conveno.jdbc.util.StringParser;
+import net.sf.cglib.proxy.Enhancer;
 import sun.misc.Unsafe;
 
 import javax.sql.DataSource;
@@ -45,10 +46,8 @@ public final class ConvenoRouter {
 
     private Map<Class<?>, Object> repositoriesProxyInstances = new ConcurrentHashMap<>();
 
-    private <T> T toProxy(ClassLoader classLoader, ProxiedRepository repositoryProxy) {
-        @SuppressWarnings("unchecked") T proxy = (T) Proxy.newProxyInstance(classLoader,
-                new Class[]{repositoryProxy.getSourceType()}, repositoryProxy);
-
+    private <T> T toProxy(ProxiedRepository repositoryProxy) {
+        @SuppressWarnings("unchecked") T proxy = (T) Enhancer.create(repositoryProxy.getSourceType(), repositoryProxy);
         return proxy;
     }
 
@@ -58,7 +57,7 @@ public final class ConvenoRouter {
         ProxiedConnection connectionProxy = new ProxiedConnection(unsafe, connection);
         ProxiedRepository repositoryProxy = new ProxiedRepository(connectionProxy, repositoryType);
 
-        return toProxy(repositoryType.getClassLoader(), repositoryProxy);
+        return toProxy(repositoryProxy);
     }
 
     public <T> T getRepository(Class<T> repositoryType) {
