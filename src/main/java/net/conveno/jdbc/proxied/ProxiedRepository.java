@@ -137,7 +137,7 @@ public class ProxiedRepository implements InvocationHandler {
                     response = transaction.executeQueries(this, method, args);
 
                 } else {
-                    throw new InvalidObjectException(method.toString());
+                    throw new IllegalArgumentException("Method is not marked @ConvenoQuery - " + method);
                 }
             }
 

@@ -53,6 +53,6 @@ public class ProxiedQuery implements Cloneable, Serializable {
     @SneakyThrows
     @Override
     public ProxiedQuery clone() {
-        return (ProxiedQuery) super.clone();
+        return new ProxiedQuery(connection, sql, statement);
     }
 }
