@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import net.conveno.jdbc.*;
+import net.conveno.jdbc.ConvenoException;
 import net.conveno.jdbc.response.ConvenoResponse;
 import net.conveno.jdbc.response.ConvenoResponseExecutor;
 import net.conveno.jdbc.util.RepositoryValidator;
@@ -43,12 +44,20 @@ public class ProxiedRepository implements MethodInterceptor {
         }
     }
 
+    private boolean isResponseReturnNeeded(Method method) {
+        return List.class.isAssignableFrom(method.getReturnType());
+    }
+
     @SneakyThrows
     private <T> T execute(Method method, SneakySupplier<T> supplier) {
         if (RepositoryValidator.isAsynchronous(method)) {
             ConvenoAsynchronous asynchronous = method.getDeclaredAnnotation(ConvenoAsynchronous.class);
 
             if (asynchronous.onlySubmit()) {
+                if (isResponseReturnNeeded(method)) {
+                    throw new ConvenoException(method, "Annotation @ConvenoAsynchronous must be return nothing");
+                }
+
                 THREADS_POOL_EXECUTOR.submit(() -> SneakySupplier.sneakyGet(supplier));
                 return null;
             }
@@ -105,12 +114,10 @@ public class ProxiedRepository implements MethodInterceptor {
 
     @Override
     public Object intercept(Object o, Method method, Object[] args, MethodProxy methodProxy) {
-
-        Class<?> returnType = method.getReturnType();
         boolean isResponseAwait = RepositoryValidator.canResponseReturn(method);
 
-        if (isResponseAwait && !List.class.isAssignableFrom(returnType)) {
-            throw new IllegalArgumentException("Method marked @ConvenoNonResponse, then he`s must be return void - " + method);
+        if (isResponseAwait && !isResponseReturnNeeded(method)) {
+            throw new ConvenoException(method, "Method is not marked @ConvenoNonResponse, because he`s must be return nothing");
         }
 
         return execute(method, () -> {
@@ -133,7 +140,7 @@ public class ProxiedRepository implements MethodInterceptor {
                 response = transaction.executeQueries(this, method, args);
 
             } else {
-                throw new IllegalArgumentException("Method is not marked @ConvenoQuery - " + method);
+                throw new ConvenoException(method, "Method is not marked @ConvenoQuery");
             }
 
             return isResponseAwait ? response : null;
