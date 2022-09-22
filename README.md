@@ -1,6 +1,6 @@
 <div align="center">
 
-![logo](/images/CONVENO-jdbc.png)
+![logo](/assets/logo.png)
 
 [![MIT License](https://img.shields.io/github/license/pl3xgaming/Purpur?&logo=github)](LICENSE)
 
