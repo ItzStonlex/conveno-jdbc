@@ -15,7 +15,8 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ConvenoResponseLine extends LinkedHashMap<Integer, Object> implements Cloneable {
 
-    private static final Supplier<NoSuchElementException> NO_VALUE_PRESENT_SUPPLIER = (() -> new NoSuchElementException("no value present"));
+    private static final Supplier<NoSuchElementException> NO_VALUE_PRESENT_SUPPLIER =
+            (() -> new NoSuchElementException("no value present"));
 
     @Getter
     boolean firstLine, lastLine;

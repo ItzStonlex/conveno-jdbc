@@ -1,6 +1,5 @@
 package net.conveno.jdbc.proxied;
 
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;

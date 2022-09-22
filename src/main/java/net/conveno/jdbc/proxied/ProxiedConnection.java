@@ -10,10 +10,7 @@ import net.conveno.jdbc.response.ConvenoResponseExecutor;
 import java.lang.reflect.Parameter;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Getter
 @RequiredArgsConstructor
@@ -25,7 +22,7 @@ public class ProxiedConnection {
     private ConvenoRouter router;
     private Connection connection;
 
-    private Map<String, ProxiedQuery> cache = new IdentityHashMap<>();
+    private Map<String, ProxiedQuery> cache = new HashMap<>();
 
     public ProxiedQuery query(CacheScope scope, String sql)
     throws SQLException {

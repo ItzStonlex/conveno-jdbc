@@ -7,7 +7,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.function.Supplier;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @FieldDefaults(makeFinal = true)
@@ -91,7 +91,7 @@ public class ConvenoResponse extends ArrayList<ConvenoResponseLine> {
 
     public <R, T extends ConvenoResponseAdapter<R>> R toFirst(Class<T> adaptiveType) {
         if (!isEmpty()) {
-            return unsafeAllocate(adaptiveType).convert(get(0));
+            return unsafeAllocate(adaptiveType).convert(first());
         }
 
         return null;
@@ -99,7 +99,7 @@ public class ConvenoResponse extends ArrayList<ConvenoResponseLine> {
 
     public <R, T extends ConvenoResponseAdapter<R>> R toLast(Class<T> adaptiveType) {
         if (!isEmpty()) {
-            return unsafeAllocate(adaptiveType).convert(get(size() - 1));
+            return unsafeAllocate(adaptiveType).convert(last());
         }
 
         return null;
@@ -107,6 +107,22 @@ public class ConvenoResponse extends ArrayList<ConvenoResponseLine> {
 
     public <R, T extends ConvenoResponseAdapter<R>> List<R> toList(Class<T> adaptiveType) {
         return stream().map(responseLine -> unsafeAllocate(adaptiveType).convert(responseLine)).collect(Collectors.toList());
+    }
+
+    public <R, T extends ConvenoResponseAdapter<R>> List<R> toList(Class<T> adaptiveType, Predicate<R> filter) {
+        return stream().map(responseLine -> unsafeAllocate(adaptiveType).convert(responseLine)).filter(filter).collect(Collectors.toList());
+    }
+
+    public <R, T extends ConvenoResponseAdapter<R>> List<R> toList(long limit, Class<T> adaptiveType) {
+        return stream().limit(limit).map(responseLine -> unsafeAllocate(adaptiveType).convert(responseLine)).collect(Collectors.toList());
+    }
+
+    public <R, T extends ConvenoResponseAdapter<R>> List<R> toList(long limit, Class<T> adaptiveType, Predicate<R> filter) {
+        return stream().limit(limit).map(responseLine -> unsafeAllocate(adaptiveType).convert(responseLine)).filter(filter).collect(Collectors.toList());
+    }
+
+    public <R, T extends ConvenoResponseAdapter<R>> List<R> toList(int limit, Class<T> adaptiveType) {
+        return toList((long) limit, adaptiveType);
     }
 
     public ConvenoResponseLine first() {
@@ -120,4 +136,5 @@ public class ConvenoResponse extends ArrayList<ConvenoResponseLine> {
 
         return null;
     }
+
 }

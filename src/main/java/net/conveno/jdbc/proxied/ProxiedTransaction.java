@@ -20,33 +20,29 @@ public class ProxiedTransaction {
     @NonFinal
     private boolean canCommit;
 
-    synchronized void commit()
-    throws SQLException {
-
-        if (canCommit) {
-            connection.getConnection().commit();
-        }
-    }
-
-    synchronized void rollback()
-    throws SQLException {
-
-        canCommit = false;
-        connection.getConnection().rollback();
-    }
-
-    synchronized void begin()
-    throws SQLException {
+    void begin() throws SQLException {
 
         canCommit = true;
         connection.getConnection().setAutoCommit(!canCommit);
     }
 
-    synchronized void end()
-    throws SQLException {
+    void end() throws SQLException {
 
         canCommit = false;
         connection.getConnection().setAutoCommit(!canCommit);
+    }
+
+    void rollback() throws SQLException {
+
+        canCommit = false;
+        connection.getConnection().rollback();
+    }
+
+    void commit() throws SQLException {
+
+        if (canCommit) {
+            connection.getConnection().commit();
+        }
     }
 
     public synchronized ConvenoTransactionResponse executeQueries(ProxiedRepository repository, Method method, Object[] args)
