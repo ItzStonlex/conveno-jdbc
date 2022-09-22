@@ -45,7 +45,8 @@ public class ProxiedRepository implements MethodInterceptor {
     }
 
     private boolean isResponseReturnNeeded(Method method) {
-        return List.class.isAssignableFrom(method.getReturnType());
+        Class<?> returnType = method.getReturnType();
+        return !returnType.isPrimitive() /* void */ && List.class.isAssignableFrom(returnType);
     }
 
     @SneakyThrows
