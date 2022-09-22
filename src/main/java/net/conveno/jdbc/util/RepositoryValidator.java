@@ -2,6 +2,7 @@ package net.conveno.jdbc.util;
 
 import lombok.experimental.UtilityClass;
 import net.conveno.jdbc.ConvenoAsynchronous;
+import net.conveno.jdbc.ConvenoNonResponse;
 import net.conveno.jdbc.ConvenoQuery;
 import net.conveno.jdbc.ConvenoTransaction;
 
@@ -20,6 +21,10 @@ public class RepositoryValidator {
 
     public boolean isTransaction(Method method) {
         return method.isAnnotationPresent(ConvenoTransaction.class);
+    }
+
+    public boolean canResponseReturn(Method method) {
+        return !method.isAnnotationPresent(ConvenoNonResponse.class);
     }
 
     public String toStringQuery(ConvenoQuery convenoQuery) {

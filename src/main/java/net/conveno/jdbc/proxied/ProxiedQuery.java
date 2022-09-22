@@ -1,9 +1,6 @@
 package net.conveno.jdbc.proxied;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import net.conveno.jdbc.response.ConvenoResponseExecutor;
@@ -53,8 +50,9 @@ public class ProxiedQuery implements Cloneable, Serializable {
         return () -> Result.of(statement.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS), statement.getGeneratedKeys());
     }
 
+    @SneakyThrows
     @Override
     public ProxiedQuery clone() {
-        return new ProxiedQuery(connection, sql, statement);
+        return (ProxiedQuery) super.clone();
     }
 }

@@ -49,11 +49,12 @@ public interface JDBCRepositoryTest {
      * Marked as asynchronous.
      * {@link ConvenoAsynchronous}
      */
-    @ConvenoAsynchronous(onlySubmit = true)
     @ConvenoQuery(sql = "create table if not exists ${table} (" +
             "id int not null primary key auto_increment, " +
             "name varchar not null, " +
             "age int not null)")
+    @ConvenoNonResponse
+    @ConvenoAsynchronous(onlySubmit = true)
     void createTable();
 
     /**

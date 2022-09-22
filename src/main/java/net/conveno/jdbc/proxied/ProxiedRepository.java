@@ -123,10 +123,13 @@ public class ProxiedRepository implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) {
 
         Class<?> returnType = method.getReturnType();
-        boolean isResponseAwait = List.class.isAssignableFrom(returnType);
+        boolean isResponseAwait = RepositoryValidator.canResponseReturn(method);
+
+        if (isResponseAwait && !List.class.isAssignableFrom(returnType)) {
+            throw new IllegalArgumentException("Method marked @ConvenoNonResponse, then he`s must be return void - " + method);
+        }
 
         return execute(method, () -> {
-
             List<ConvenoResponse> response = new ArrayList<>();
 
             if (RepositoryValidator.isQuery(method)) {

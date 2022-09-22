@@ -9,8 +9,10 @@ import net.conveno.jdbc.response.ConvenoResponseExecutor;
 
 import java.lang.reflect.Parameter;
 import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Getter
 @RequiredArgsConstructor
@@ -24,8 +26,7 @@ public class ProxiedConnection {
 
     private Map<String, ProxiedQuery> cache = new HashMap<>();
 
-    public ProxiedQuery query(CacheScope scope, String sql)
-    throws SQLException {
+    public ProxiedQuery query(CacheScope scope, String sql) {
 
         if (scope == null) {
             return new ProxiedQuery(this, sql);
@@ -34,8 +35,7 @@ public class ProxiedConnection {
         return scope.processGet(this, sql, cache);
     }
 
-    ConvenoResponseExecutor execute(ProxiedQuery query, ProxiedRepository repository, Parameter[] parameters, Object[] initargs)
-    throws SQLException {
+    ConvenoResponseExecutor execute(ProxiedQuery query, ProxiedRepository repository, Parameter[] parameters, Object[] initargs) {
 
         if (FETCH_PREFIXES.stream().anyMatch(prefix -> query.getSql().toLowerCase().startsWith(prefix))) {
             return query.wrapResponse(repository, parameters, initargs);
